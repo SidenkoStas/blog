@@ -4,10 +4,16 @@ from django.utils import timezone
 from django.urls import reverse
 
 class PublishedManager(models.Manager):
+    """
+    Менеджер для взаимодействия только опубликованных постов.
+    """
     def get_queryset(self):
         return super().get_queryset().filter(status=Post.Status.PUBLISHED)
 
 class Post(models.Model):
+    """
+    Модель для созддания постов.
+    """
     class Status(models.TextChoices):
         DRAFT = "DF", "Draft"
         PUBLISHED = "PB", "Published"
