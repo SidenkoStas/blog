@@ -15,4 +15,21 @@
       Поделиться постом
     </a>
   </p>
+  {% with comments.count as totat_comments %}
+    <h2>Общее количество комментариев - {{ totat_comments }}</h2>
+    <h2>{{ totat_comments }} comment{{ totat_comments|pluralize }}</h2>
+  {% endwith %}
+  <h2>Комментарии</h2>
+  {% for comment in comments %}
+    <div class="comment">
+      <p class="info">
+        {{ forloop.counter }} комментарий от {{ comment.name }}
+        {{ comment.created }}
+      </p>
+      {{ comment.body|linebreaks }}
+    </div>
+  {% empty %}
+    <p>Тут ещё нет комментариев</p>
+  {% endfor %}
+  {% include "blog/post/includes/comment_form.html" %}
 {% endblock content %}
