@@ -5,6 +5,7 @@ from django.views.generic import ListView
 from django.views.decorators.http import require_POST
 from .forms import EmailPostForm, CommentForm
 from .models import Post, Comment
+from taggit.models import Tag
 
 class PostList(ListView):
     """
@@ -14,6 +15,18 @@ class PostList(ListView):
     context_object_name = "posts"
     paginate_by = 3
     template_name = "blog/post/list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        try:
+            tag_slug = self.request.GET.tag_slug
+        except AttributeError:
+            tag_slug = None
+        if tag_slug:
+            pass
+        context["tags"] = Tag.objects.all()
+        print(self.request.GET)
+        return context
 
 def post_detail(request, year, month, day, post):
     """
@@ -74,16 +87,19 @@ def post_share(request, post_pk):
         {"post": post, "form": form, "sent": sent}
     )
 
-# Старые наработки
-def post_list(request):
+def post_list(request, tag_slug=None):
     """
     Представление для обработки всех постов.
     """
     posts = Post.published.all()
+    tag = None
+    if tag_slug:
+        tag = get_object_or_404(Tag, slug=tag_slug)
+        posts = posts.filter(tags__in=[tag])
     paginator = Paginator(posts, 3)
     page_number = request.GET.get("page", 1)
     posts = paginator.get_page(page_number)
     return render(
         request, "blog/post/list.html",
-        {"posts": posts}
+        {"posts": posts, "tag": tag}
     )

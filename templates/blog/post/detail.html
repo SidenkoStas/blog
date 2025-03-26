@@ -17,7 +17,6 @@
   </p>
   {% with comments.count as totat_comments %}
     <h2>Общее количество комментариев - {{ totat_comments }}</h2>
-    <h2>{{ totat_comments }} comment{{ totat_comments|pluralize }}</h2>
   {% endwith %}
   <h2>Комментарии</h2>
   {% for comment in comments %}

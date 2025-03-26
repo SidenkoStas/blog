@@ -8,7 +8,7 @@
     <p>"{{ post.title }}" удачно отправлен {{ form.cleaned_data.to }}</p>
   {% else %}
     <h1>Поделиться постом {{ post.title }} по email</h1>
-    <form method="post">
+    <form action="{% url 'blog:post_share' post.pk %}" method="post">
       {{ form.as_p }}
       {% csrf_token %}
       <input type="submit" value="Оправить email">

@@ -1,10 +1,11 @@
 from django.urls import path
-from .views import post_detail, post_share, post_comment, PostList
+from .views import post_detail, post_share, post_comment, post_list, PostList
 
 app_name = "blog"
 
 urlpatterns = [
-    path("", PostList.as_view(), name="post_list"),
+    # path("", PostList.as_view(), name="post_list"),
+    path("", post_list, name="post_list"),
     path(
         "<int:year>/<int:month>/<int:day>/<slug:post>/", post_detail,
         name="post_detail"
