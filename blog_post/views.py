@@ -4,14 +4,15 @@ from django.core.mail import send_mail
 from django.views.generic import ListView
 from django.views.decorators.http import require_POST
 from .forms import EmailPostForm, CommentForm
-from .models import Post, Comment
+from .models import Post
 from taggit.models import Tag
+from django.db.models import Count
 
 class PostList(ListView):
     """
     Представление-класс для обработки всех постов.
     """
-    queryset = Post.objects.all()
+    queryset = Post.published.all()
     context_object_name = "posts"
     paginate_by = 3
     template_name = "blog/post/list.html"
@@ -19,7 +20,7 @@ class PostList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
-            tag_slug = self.request.GET.tag_slug
+            tag_slug = self.request.GET["tag_slug"]
         except AttributeError:
             tag_slug = None
         if tag_slug:
@@ -27,6 +28,23 @@ class PostList(ListView):
         context["tags"] = Tag.objects.all()
         print(self.request.GET)
         return context
+
+def post_list(request, tag_slug=None):
+    """
+    Представление для обработки всех постов.
+    """
+    posts = Post.published.all()
+    tag = None
+    if tag_slug:
+        tag = get_object_or_404(Tag, slug=tag_slug)
+        posts = posts.filter(tags__in=[tag])
+    paginator = Paginator(posts, 3)
+    page_number = request.GET.get("page", 1)
+    posts = paginator.get_page(page_number)
+    return render(
+        request, "blog/post/list.html",
+        {"posts": posts, "tag": tag}
+    )
 
 def post_detail(request, year, month, day, post):
     """
@@ -38,9 +56,19 @@ def post_detail(request, year, month, day, post):
     )
     comments = post.comments.filter(active=True)
     form = CommentForm()
+
+    post_tags_ids = post.tags.values_list("id", flat=True)
+    similar_posts = Post.published.filter(
+        tags__in=post_tags_ids
+    ).exclude(id=post.id)
+    similar_posts = similar_posts.annotate(
+        same_tags=Count("tags"),
+    ).order_by("-same_tags", "-publish")[:4]
+
     return render(
         request, "blog/post/detail.html",
-        {"post": post, "comments": comments, "form": form}
+        {"post": post, "comments": comments, "form": form,
+         "similar_posts": similar_posts}
     )
 
 @require_POST # Разрешает тоько метод ПОСТ
@@ -85,21 +113,4 @@ def post_share(request, post_pk):
     return  render(
         request, "blog/post/share.html",
         {"post": post, "form": form, "sent": sent}
-    )
-
-def post_list(request, tag_slug=None):
-    """
-    Представление для обработки всех постов.
-    """
-    posts = Post.published.all()
-    tag = None
-    if tag_slug:
-        tag = get_object_or_404(Tag, slug=tag_slug)
-        posts = posts.filter(tags__in=[tag])
-    paginator = Paginator(posts, 3)
-    page_number = request.GET.get("page", 1)
-    posts = paginator.get_page(page_number)
-    return render(
-        request, "blog/post/list.html",
-        {"posts": posts, "tag": tag}
     )
