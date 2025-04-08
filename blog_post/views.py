@@ -57,6 +57,7 @@ def post_detail(request, year, month, day, post):
     comments = post.comments.filter(active=True)
     form = CommentForm()
 
+    # Список похожих постов по тегам
     post_tags_ids = post.tags.values_list("id", flat=True)
     similar_posts = Post.published.filter(
         tags__in=post_tags_ids
@@ -94,7 +95,7 @@ def post_share(request, post_pk):
         form = EmailPostForm(request.POST)
         if form.is_valid():
             clean_data = form.cleaned_data
-            post_url =  (post.get_absolute_url())
+            post_url =  request.build_absolute_uri(post.get_absolute_url())
             subject = (
                 f"{clean_data["name"]} ({clean_data["email"]}) "
                 f"Рекомендую тебе почитать {post.title}"
