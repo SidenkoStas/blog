@@ -1,0 +1,29 @@
+{% extends "blog/base.html" %}
+{% load blog_tags %}
+
+{% block title %}Поисковик{% endblock title %}
+
+{% block content %}
+  {% if search %}
+    <h1>Посты содержащие запрос: {{ search }}</h1>
+    <h3>
+      {% with results.count as total_results %}
+      Найдено {{ total_results }} результатов
+      {% endwith %}
+    </h3>
+    {% for post in results %}
+      <h4>
+        <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+      </h4>
+      {{ post.body|markdown|truncatewords_html:12 }}
+    {% empty %}
+      <p>Для вашего запроса нет результатов.</p>
+    {% endfor %}
+  {% else %}
+    <h1>Поиск в постах</h1>
+    <form method="get">
+      {{ form.as_p }}
+      <input type="submit" value="Искать">
+    </form>
+  {% endif %}
+{% endblock content %}

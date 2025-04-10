@@ -3,10 +3,11 @@ from django.core.paginator import Paginator
 from django.core.mail import send_mail
 from django.views.generic import ListView
 from django.views.decorators.http import require_POST
-from .forms import EmailPostForm, CommentForm
+from .forms import EmailPostForm, CommentForm, SearchForm
 from .models import Post
 from taggit.models import Tag
 from django.db.models import Count
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 
 class PostList(ListView):
     """
@@ -74,6 +75,10 @@ def post_detail(request, year, month, day, post):
 
 @require_POST # Разрешает тоько метод ПОСТ
 def post_comment(request, post_id):
+    """
+    Опубликовать комментарий к посту.
+    Только POST разрешён.
+    """
     post = get_object_or_404(
         Post, id=post_id, status=Post.Status.PUBLISHED
     )
@@ -89,6 +94,9 @@ def post_comment(request, post_id):
     )
 
 def post_share(request, post_pk):
+    """
+    Поделиться постом по почте.
+    """
     post = get_object_or_404(Post, pk=post_pk, status=Post.Status.PUBLISHED)
     sent = False
     if request.method == "POST":
@@ -114,4 +122,29 @@ def post_share(request, post_pk):
     return  render(
         request, "blog/post/share.html",
         {"post": post, "form": form, "sent": sent}
+    )
+
+def post_search(request):
+    """
+    Поисковик в постах.
+    """
+    form = SearchForm()
+    search = None
+    results = []
+
+    if "search" in request.GET:
+        form = SearchForm(request.GET)
+        if form.is_valid():
+            search = form.cleaned_data["search"]
+            search_vector = SearchVector(
+                "title", "body", config="russian"
+            )
+            search_query = SearchQuery(search, config="russian")
+            results = Post.published.annotate(
+                search=search_vector,
+                rank=SearchRank(search_vector, search_query)
+            ).filter(search=search_query).order_by("-rank")
+    return render(
+        request, "blog/post/search.html",
+        {"form": form, "search": search, "results": results}
     )

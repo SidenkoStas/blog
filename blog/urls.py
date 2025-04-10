@@ -17,9 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.sitemaps.views import sitemap
-from blog_post.sitemaps import PostSitemap
+from blog_post.sitemaps import PostSitemap, TagSitemap
 
-sitemaps = {"post": PostSitemap}
+sitemaps = {"post": PostSitemap, "tags": TagSitemap}
 
 urlpatterns = [
     path('admin/', admin.site.urls),

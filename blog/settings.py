@@ -44,8 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Extra
     "django.contrib.sites",
     "django.contrib.sitemaps",
+    "django.contrib.postgres",
     # Сторонние приложения
     "taggit",
     # Свои приложения
